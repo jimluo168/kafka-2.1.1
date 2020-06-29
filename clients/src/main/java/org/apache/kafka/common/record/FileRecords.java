@@ -219,6 +219,8 @@ public class FileRecords extends AbstractRecords implements Closeable {
      */
     public void renameTo(File f) throws IOException {
         try {
+            // KAFKA-6983: Error while deleting segments - The process cannot access the file because it is being used by another process
+//            channel.close();
             Utils.atomicMoveWithFallback(file.toPath(), f.toPath());
         } finally {
             this.file = f;

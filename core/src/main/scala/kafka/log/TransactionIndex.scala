@@ -103,8 +103,11 @@ class TransactionIndex(val startOffset: Long, @volatile var file: File) extends 
 
   def renameTo(f: File): Unit = {
     try {
-      if (file.exists)
+      if (file.exists){
+        // KAFKA-6983: Error while deleting segments - The process cannot access the file because it is being used by another process
+//        close()
         Utils.atomicMoveWithFallback(file.toPath, f.toPath)
+      }
     } finally file = f
   }
 
