@@ -24,7 +24,7 @@ import java.nio.file.{Files, StandardOpenOption}
 import kafka.utils.{Logging, nonthreadsafe}
 import org.apache.kafka.common.KafkaException
 import org.apache.kafka.common.requests.FetchResponse.AbortedTransaction
-import org.apache.kafka.common.utils.Utils
+import org.apache.kafka.common.utils.{OperatingSystem, Utils}
 
 import scala.collection.mutable.ListBuffer
 
@@ -103,9 +103,11 @@ class TransactionIndex(val startOffset: Long, @volatile var file: File) extends 
 
   def renameTo(f: File): Unit = {
     try {
-      if (file.exists){
+      if (file.exists) {
         // KAFKA-6983: Error while deleting segments - The process cannot access the file because it is being used by another process
-//        close()
+        if(OperatingSystem.IS_WINDOWS) {
+          close()
+        }
         Utils.atomicMoveWithFallback(file.toPath, f.toPath)
       }
     } finally file = f

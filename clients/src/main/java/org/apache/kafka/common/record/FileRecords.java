@@ -20,6 +20,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.network.TransportLayer;
 import org.apache.kafka.common.record.FileLogInputStream.FileChannelRecordBatch;
 import org.apache.kafka.common.utils.AbstractIterator;
+import org.apache.kafka.common.utils.OperatingSystem;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
 
@@ -220,7 +221,9 @@ public class FileRecords extends AbstractRecords implements Closeable {
     public void renameTo(File f) throws IOException {
         try {
             // KAFKA-6983: Error while deleting segments - The process cannot access the file because it is being used by another process
-//            channel.close();
+            if(OperatingSystem.IS_WINDOWS) {
+                closeHandlers();
+            }
             Utils.atomicMoveWithFallback(file.toPath(), f.toPath());
         } finally {
             this.file = f;
