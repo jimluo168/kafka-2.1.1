@@ -198,22 +198,24 @@ abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Lon
   }
 
   /**
-    * Rename the file that backs this offset index
-    *
-    * @throws IOException if rename fails
-    */
+   * Rename the file that backs this offset index
+   *
+   * @throws IOException if rename fails
+   */
   def renameTo(f: File) {
     try {
       // KAFKA-6983: Error while deleting segments - The process cannot access the file because it is being used by another process
-      closeHandler()
+      if(OperatingSystem.IS_WINDOWS) {
+        closeHandler()
+      }
       Utils.atomicMoveWithFallback(file.toPath, f.toPath)
     }
     finally file = f
   }
 
   /**
-    * Flush the data in the index to disk
-    */
+   * Flush the data in the index to disk
+   */
   def flush() {
     inLock(lock) {
       mmap.force()
@@ -221,12 +223,12 @@ abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Lon
   }
 
   /**
-    * Delete this index file.
-    *
-    * @throws IOException if deletion fails due to an I/O error
-    * @return `true` if the file was deleted by this method; `false` if the file could not be deleted because it did
-    *         not exist
-    */
+   * Delete this index file.
+   *
+   * @throws IOException if deletion fails due to an I/O error
+   * @return `true` if the file was deleted by this method; `false` if the file could not be deleted because it did
+   *         not exist
+   */
   def deleteIfExists(): Boolean = {
     inLock(lock) {
       // On JVM, a memory mapping is typically unmapped by garbage collector.
@@ -303,11 +305,10 @@ abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Lon
   }
 
   /**
-    * Check if a particular offset is valid to be appended to this index.
-    *
-    * @param offset The offset to check
-    * @return true if this offset is valid to be appended to this index; false otherwise
-    */
+   * Check if a particular offset is valid to be appended to this index.
+   * @param offset The offset to check
+   * @return true if this offset is valid to be appended to this index; false otherwise
+   */
   def canAppendOffset(offset: Long): Boolean = {
     toRelative(offset).isDefined
   }
